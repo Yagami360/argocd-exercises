@@ -12,12 +12,11 @@ MAX_NODES=4
 
 IMAGE_NAME=predict-server-image-eks
 ECR_REPOSITORY_NAME=${IMAGE_NAME}
-ENABLE_BUILD=0
-#ENABLE_BUILD=1
+#ENABLE_BUILD=0
+ENABLE_BUILD=1
 
 ARGOCD_APP_NAME="eks-argocd-app"
 REPOSITORY_URL="https://github.com/Yagami360/argocd-exercises.git"
-#K8S_MANIFESTS_DIR="."
 K8S_MANIFESTS_DIR="k8s"
 
 #-----------------------------
