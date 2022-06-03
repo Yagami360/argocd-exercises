@@ -16,9 +16,9 @@ ENABLE_BUILD=0
 #ENABLE_BUILD=1
 
 ARGOCD_APP_NAME="eks-argocd-app"
-REPOSITORY_URL="https://github.com/Yagami360/ai-product-dev-tips.git"
-K8S_MANIFESTS_DIR="."
-#K8S_MANIFESTS_DIR="ml_ops/63/k8s"
+REPOSITORY_URL="https://github.com/Yagami360/argocd-exercises.git"
+#K8S_MANIFESTS_DIR="."
+K8S_MANIFESTS_DIR="k8s"
 
 #-----------------------------
 # OS判定

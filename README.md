@@ -304,7 +304,7 @@ Github Actions のような CI/CD ツールを利用して Kubernetes へのデ�
 
     > 初期ログインのアカウントは、作成した ArgoCD k8s リソースの Secret リソースに記載されている
 
-1. ArgoCD API Server にブラウザアクセスする<br>
+1. ArgoCD コンソール画面にブラウザアクセスする<br>
     ArgoCD の k8s リソースデプロイ時に作成される ArgoCD の Service (ArgoCD API Server) にアクセスすることで、ArgoCD のコンソール画面に移動することができる
 
     以下のコマンドでは、ArgoCD API Server の Service を `"type": "LoadBalancer"` に変更して、`EXTERNAL-IP` を発行し、その URL にブラウザアクセスするようにしている
@@ -344,7 +344,7 @@ Github Actions のような CI/CD ツールを利用して Kubernetes へのデ�
             
             > `eksctl create cluster --name ${CLUSTER_NAME}` で指定したクラスター名ではないことに注意
 
-    1. ArgoCD で管理する GitHub の k8s マニフェストファイルのフォルダーを設定<br>
+    1. ArgoCD アプリを作成する<br>
         ```sh
         argocd app create ${ARGOCD_APP_NAME} \
             --repo ${REPOSITORY_URL} \
@@ -353,12 +353,20 @@ Github Actions のような CI/CD ツールを利用して Kubernetes へのデ�
             --dest-namespace default \
             --sync-policy automated
         ```
+        - `${ARGOCD_APP_NAME}` : ArgoCD アプリ名（プロジェクト名） 
+        - `${REPOSITORY_URL}` : ArgoCD で管理する GitHub レポジトリ
+        - `${K8S_MANIFESTS_DIR}` : ArgoCD で管理する GitHub の k8s マニフェストファイルのフォルダーを設定
+
     1. ArgoCD と GitHub レポジトリの同期を行う<br>
         ```sh
         argocd app sync ${ARGOCD_APP_NAME}
         ```
 
-1. k8s マニフェストを修正後、git push する<br>
+1. 【オプション】ArgoCD のコンソール画面を確認する<br>
+    ArgoCD と GitHub レポジトリの同期が成功している場合は、ArgoCD のコンソール画面は、以下のようになる
+    <img width="1000" alt="image" src="https://user-images.githubusercontent.com/25688193/171857867-af1801a5-fc4b-49ac-82d3-8e7d16116039.png">
+
+1. k8s マニフェストを修正後 git push する<br>
     k8s マニフェストを修正し、git push すると、ArgoCD 管理下に置かれているクラスターの k8s リソースが自動的にデプロイされ、k8s リソースの CD を実現できる<br>
 
 <!--
