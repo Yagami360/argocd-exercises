@@ -368,6 +368,7 @@ Github Actions のような CI/CD ツールを利用して Kubernetes へのデ�
 
 1. k8s マニフェストを修正後 git push する<br>
     k8s マニフェストを修正し、git push すると、ArgoCD 管理下に置かれているクラスターの k8s リソースが自動的にデプロイされ、k8s リソースの CD を実現できる<br>
+    <img width="1000" alt="image" src="https://user-images.githubusercontent.com/25688193/171859889-afe7ed09-b268-42f4-aef2-127fdda1072e.png">
 
 <!--
 1. EKS 上の API に対してリクエスト処理を行う<br>
