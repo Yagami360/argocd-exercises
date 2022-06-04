@@ -315,36 +315,37 @@ Github Actions のような CI/CD ツールを利用して Kubernetes へのデ�
     open "https://${ARGOCD_SERVER_DOMAIN}"
     ```
 
-1. ArgoCD で管理したい k8s マニフェストファイルと Git リポジトリーの同期を行う<br>
+1. クラスター名を表示する<br>
+    ```sh
+    argocd cluster add
+    ```
+    ```sh
+    (py36) ~/GitHub/ai-product-dev-tips/ml_ops/63 $ argocd cluster add
+    ERRO[0000] Choose a context name from:                  
+    CURRENT  NAME                                                              CLUSTER                                                           SERVER
+            docker-desktop                                                    docker-desktop                                                    https://kubernetes.docker.internal:6443
+            docker-for-desktop                                                docker-desktop                                                    https://kubernetes.docker.internal:6443
+            gke_my-project2-303004_asia-northeast1-a_api-cluster              gke_my-project2-303004_asia-northeast1-a_api-cluster              https://35.200.125.148
+            ...
+            gke_myproject-292103_asia-northeast1-a_sample-gpu-cluster         gke_myproject-292103_asia-northeast1-a_sample-gpu-cluster         https://35.187.219.102
+            gke_myproject-292103_us-central1-b_sample-gpu-cluster             gke_myproject-292103_us-central1-b_sample-gpu-cluster             https://34.67.200.11
+    *        iam-root-account@eks-cluster.us-west-2.eksctl.io                  eks-cluster.us-west-2.eksctl.io                                   https://4DB3B1C2AA5DED141F113D8022ABB385.yl4.us-west-2.eks.amazonaws.com
+    ```
 
-    1. クラスター名を表示する<br>
-        ```sh
-        argocd cluster add
-        ```
-        ```sh
-        (py36) ~/GitHub/ai-product-dev-tips/ml_ops/63 $ argocd cluster add
-        ERRO[0000] Choose a context name from:                  
-        CURRENT  NAME                                                              CLUSTER                                                           SERVER
-                docker-desktop                                                    docker-desktop                                                    https://kubernetes.docker.internal:6443
-                docker-for-desktop                                                docker-desktop                                                    https://kubernetes.docker.internal:6443
-                gke_my-project2-303004_asia-northeast1-a_api-cluster              gke_my-project2-303004_asia-northeast1-a_api-cluster              https://35.200.125.148
-                ...
-                gke_myproject-292103_asia-northeast1-a_sample-gpu-cluster         gke_myproject-292103_asia-northeast1-a_sample-gpu-cluster         https://35.187.219.102
-                gke_myproject-292103_us-central1-b_sample-gpu-cluster             gke_myproject-292103_us-central1-b_sample-gpu-cluster             https://34.67.200.11
-        *        iam-root-account@eks-cluster.us-west-2.eksctl.io                  eks-cluster.us-west-2.eksctl.io                                   https://4DB3B1C2AA5DED141F113D8022ABB385.yl4.us-west-2.eks.amazonaws.com
-        ```
+    > 今回の場合は、対象となるのは `iam-root-account@eks-cluster.us-west-2.eksctl.io`
 
-        > 今回の場合は、対象となるのは `iam-root-account@eks-cluster.us-west-2.eksctl.io`
+1. ArgoCD で管理するクラスターを選択し設定する<br>
+    ```sh
+    argocd cluster add ${K8S_CLUSTER_NAME}
+    ```
+    - `K8S_CLUSTER_NAME` : `argocd cluster add` コマンドで表示されるクラスター名
+        
+        > `eksctl create cluster --name ${CLUSTER_NAME}` で指定したクラスター名ではないことに注意
 
-    1. ArgoCD で管理するクラスターを選択し設定する<br>
-        ```sh
-        argocd cluster add ${K8S_CLUSTER_NAME}
-        ```
-        - `K8S_CLUSTER_NAME` : `argocd cluster add` コマンドで表示されるクラスター名
-            
-            > `eksctl create cluster --name ${CLUSTER_NAME}` で指定したクラスター名ではないことに注意
+1. ArgoCD アプリを作成する<br>
+    ArgoCD アプリを作成し、ArgoCD で管理したい GitHub レポジトリの k8s マニフェストファイルを関連付ける。
 
-    1. ArgoCD アプリを作成する<br>
+    - CLI で行う場合<br>
         ```sh
         argocd app create ${ARGOCD_APP_NAME} \
             --repo ${REPOSITORY_URL} \
@@ -357,12 +358,43 @@ Github Actions のような CI/CD ツールを利用して Kubernetes へのデ�
         - `${REPOSITORY_URL}` : ArgoCD で管理する GitHub レポジトリ
         - `${K8S_MANIFESTS_DIR}` : ArgoCD で管理する GitHub の k8s マニフェストファイルのフォルダーを設定
 
-    1. ArgoCD と GitHub レポジトリの同期を行う<br>
-        ```sh
-        argocd app sync ${ARGOCD_APP_NAME}
-        ```
+    - k8s マニフェストで行う場合<br>
+        1. k8s マニフェストを作成する<br>
+            ArgoCD アプリの k8s マニフェストを作成する
+            ```yaml
+            apiVersion: argoproj.io/v1alpha1
+            kind: Application
+            metadata:
+              name: argocd-config
+              namespace: argocd
+            spec:
+              project: default
+              source:
+                repoURL: https://github.com/Yagami360/argocd-exercises.git
+                path: k8s
+              destination:
+                server: https://kubernetes.default.svc
+                namespace: argocd
+              syncPolicy:
+                automated:
+                prune: true
+                selfHeal: true
+            ```
 
-1. 【オプション】ArgoCD のコンソール画面を確認する<br>
+        1. k8s マニフェストデプロイする<br>
+            作成した ArgoCD アプリの k8s マニフェストをデプロイすることで、ArgoCD アプリが自動的に作成される
+            ```sh
+            kubectl apply -f k8s/argocd-app.yml
+            ```
+
+    > 実際の運用では、ArgoCD アプリの作成は、後者の k8s マニフェストで行うことが多い。後者の方法では複数の ArgoCD アプリをまとめて管理できるなどのメリットがある
+
+1. ArgoCD と GitHub レポジトリの同期を行う<br>
+    作成した ArgoCD アプリに対して、ArgoCD で管理したい k8s マニフェストファイルと Git リポジトリーの同期を行う
+    ```sh
+    argocd app sync ${ARGOCD_APP_NAME}
+    ```
+
     ArgoCD と GitHub レポジトリの同期が成功している場合は、ArgoCD のコンソール画面は、以下のようになる
     <img width="1000" alt="image" src="https://user-images.githubusercontent.com/25688193/171857867-af1801a5-fc4b-49ac-82d3-8e7d16116039.png">
 

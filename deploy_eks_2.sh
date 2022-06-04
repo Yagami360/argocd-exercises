@@ -4,7 +4,7 @@ AWS_ACCOUNT_ID=735015535886
 AWS_PROFILE=Yagami360
 REGION="us-west-2"
 
-CLUSTER_NAME="eks-cluster"
+CLUSTER_NAME="eks-argocd-cluster"
 #CLUSTER_NODE_TYPE="t2.micro"
 CLUSTER_NODE_TYPE="t2.medium"
 MIN_NODES=1
@@ -16,8 +16,6 @@ ECR_REPOSITORY_NAME=${IMAGE_NAME}
 ENABLE_BUILD=1
 
 ARGOCD_APP_NAME="eks-argocd-app"
-REPOSITORY_URL="https://github.com/Yagami360/argocd-exercises.git"
-K8S_MANIFESTS_DIR="k8s"
 
 #-----------------------------
 # OS判定
@@ -213,12 +211,7 @@ K8S_CLUSTER_NAME=iam-root-account@${CLUSTER_NAME}.${REGION}.eksctl.io
 argocd cluster add ${K8S_CLUSTER_NAME}
 
 # ArgoCD で管理する GitHub の k8s マニフェストファイルのフォルダーを設定
-argocd app create ${ARGOCD_APP_NAME} \
-    --repo ${REPOSITORY_URL} \
-    --path ${K8S_MANIFESTS_DIR} \
-    --dest-server https://kubernetes.default.svc \
-    --dest-namespace default \
-    --sync-policy automated
+kubectl apply -f k8s/argocd-app.yml
 
 # ArgoCD と GitHub レポジトリの同期を行う
 argocd app sync ${ARGOCD_APP_NAME}
